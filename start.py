@@ -95,6 +95,7 @@ def info_ga():
    get_info           show information about your friend
 
    dump_id            fetching all id from friend list
+   dump_phonedob      fetching all phone and date of birth		
    dump_phone         fetching all phone number from friend list
    dump_mail          fetching all emails from friend list
    dump_<id>_id       fetching all id from your friends <spesific>
@@ -761,6 +762,56 @@ def dump_id():
 		print '[!] Connection Error                 '
 		print '[!] Stopped'
 		main()
+def dump_phonedob():
+	print '[*] load access token'
+
+	try:
+		token = open('cookie/token.log','r').read()
+		print '[*] Success load access token'
+	except IOError:
+		print '[!] failed load access token'
+		print "[*] type 'token' to generate access token"
+		main()
+
+	try:
+		os.mkdir('output')
+	except OSError:
+		pass
+
+	print "[*] fetching all phone numbers"
+	print '[*] start'
+
+	try:
+		r = requests.get('https://graph.facebook.com/me/friends?access_token='+token)
+		a = json.loads(r.text)
+
+		out = open('output/' + n[0].split(' ')[0] + '_phone.txt','w')
+
+		for i in a['data']:
+			x = requests.get("https://graph.facebook.com/"+i['id']+"?access_token="+token)
+			z = json.loads(x.text)
+
+			try:
+				out.write(z['mobile_phone'] + '#' + z['birthday'] + '\n')
+				print W + '[' + G + z['name'] + W + ']' + R + ' >> ' + W + z['mobile_phone']
+			except KeyError:
+				pass
+		out.close()
+		print '[*] done'
+		print "[*] all phone numbers successfuly retrieved"
+		print '[*] file saved : output/'+n[0].split(' ')[0] + '_phone.txt'
+		main()
+	except KeyboardInterrupt:
+		print '\r[!] Stopped'
+		main()
+	except KeyError:
+		print "[!] failed to fetch all phone numbers"
+		main()
+	except (requests.exceptions.ConnectionError , requests.exceptions.ChunkedEncodingError):
+		print '[!] Connection Error'
+		print '[!] Stopped'
+		main()
+
 
 def dump_phone():
 	print '[*] load access token'
@@ -792,7 +843,7 @@ def dump_phone():
 			z = json.loads(x.text)
 
 			try:
-				out.write(z['birthday'] + '#' + z['mobile_phone'] + '\n')
+				out.write(z['mobile_phone'] + '\n')
 				print W + '[' + G + z['name'] + W + ']' + R + ' >> ' + W + z['mobile_phone']
 			except KeyError:
 				pass
